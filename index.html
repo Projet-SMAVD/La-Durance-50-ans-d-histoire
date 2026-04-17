@@ -391,7 +391,17 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="data/points_1.js"></script>
+    <script>
+    // On définit les points directement ici pour que GitHub les trouve
+    var json_points_1 = {
+        "type": "FeatureCollection",
+        "features": [
+            { "type": "Feature", "properties": { "name": "Serre-Ponçon" }, "geometry": { "type": "Point", "coordinates": [6.29, 44.50] } },
+            { "type": "Feature", "properties": { "name": "Espinasses" }, "geometry": { "type": "Point", "coordinates": [6.18, 44.46] } },
+            { "type": "Feature", "properties": { "name": "Curbans" }, "geometry": { "type": "Point", "coordinates": [5.95, 44.42] } }
+        ]
+    };
+</script>
 
     <script>
         // CARTE 1 : Logique Scrollytelling
