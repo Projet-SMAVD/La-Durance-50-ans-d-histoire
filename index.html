@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>15 04 2026</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap');
+        
+        /* Styles Généraux */
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: #f0f2f5; 
+            scroll-behavior: smooth; 
+        }
+
+        /* Conteneur de la carte principale scrolly */
+        #map-wrapper { 
+            position: sticky; 
+            top: 0; 
+            width: 100%; 
+            height: 100vh; 
+            z-index: 1; 
+        }
+
+        #map { 
+            width: 100%; 
+            height: 100%; 
+            background: #cbd5e0; 
+        }
+
+        /* Conteneur de l'histoire */
+        #story-container { 
+            position: relative; 
+            margin-top: -100vh; 
+            z-index: 2; 
+        }
+
+        /* Blocs Pleine Largeur */
+        .full-width-block {
+            position: relative; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            text-align: center;
+            padding: 0 15%; 
+            box-sizing: border-box; 
+            z-index: 10; 
+            pointer-events: all;
+        }
+
+        /* Section Hero */
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://cdn.iris-etourism.io/uploads/ot_digne_les_bains/d7b/255-193-29213183.webp');
+            background-size: cover; 
+            color: white;
+            background-position: center;
+        }
+
+        .hero-source {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7); 
+            font-style: italic;
+            z-index: 11; 
+        }
+
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800; 
+            text-transform: uppercase; 
+            font-size: clamp(2rem, 8vw, 4rem); 
+            letter-spacing: -2px; 
+            line-height: 0.9; 
+            margin: 0;
+        }
+
+        .hero p {
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.9); 
+        }
+
+        .accent-word {
+            background: linear-gradient(to right, #1AABE3, #0B8D8B, #1AABE3);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        /* Sections Chapitres */
+        .chapter-break { 
+            background: #1a3a5a;
+            color: white;
+        }
+
+        .chapter-break2 {
+            display: flex !important;     
+            flex-direction: row !important; 
+            justify-content: center;
+            align-items: center;            
+            gap: 50px;                      
+            background: #1a3a5a;
+            color: white;
+            padding: 0 10%;                 
+            text-align: left !important;
+        }
+
+        .texte-bloc {
+            color: #dffffe;
+            font-weight: bold;
+        }
+
+        .texte-couleur {
+            color : #e67e22;
+            font-weight: bold;
+        }
+
+        .bloc-image {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .content-right {
+            flex: 1;                                      
+        }
+
+        .text-description {
+            margin-bottom: 20px;     
+        }
+
+        .text-description p {
+            margin-bottom: 15px;       
+            line-height: 1.6;          
+        }
+
+         
+        .step { 
+            min-height: 120vh;
+            display: flex; 
+            align-items: center; 
+            padding: 0 5%; 
+            pointer-events: none; 
+        }
+
+        .step-content {
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 30px; 
+            max-width: 380px;
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            pointer-events: all; 
+            opacity: 0.1; 
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .step.active .step-content { opacity: 1; transform: translateY(0); }
+        .step-image { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; }
+        
+        .spacer { height: 50vh; }
+        
+        .photo-credit{ font-size: 12px; color: #1AABE3; text-align: right; display: block; margin-top: 4px; }
+        .photo-credit-bloc{ font-size: 12px; color: #ffffff; text-align: right; display: block; margin-top: 4px; }
+
+        .image-wrapper {
+            width: 35% !important;
+            flex-shrink: 0;
+        }
+        
+        .text-source {
+            display: block; margin-top: 15px; padding-top: 10px; 
+            border-top: 1px solid #eee; font-size: 11px; 
+            color: #0B8D8B; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .bloc-source {
+            display: block; margin-top: 15px; padding-top: 10px; 
+            border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; 
+            color: #dffffe; text-transform: uppercase; letter-spacing: 0.5px;                   
+        }
+
+        /* Styles Carte Chronologique (Anciennement styles en ligne) */
+        .chrono-section {
+            background: white;
+            padding: 60px 10%;
+            text-align: left;
+            z-index: 100;
+            position: relative;
+        }
+
+        .chrono-title {
+            color: #1a3a5a; 
+            font-family: 'Montserrat';
+            margin-bottom: 10px;
+        }
+
+        #map-chrono { 
+            width: 100%; 
+            height: 500px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .slider-container {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .slider-label {
+            font-weight: bold; 
+            color: #1a3a5a;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .year-display {
+            font-size: 26px; 
+            color: #1AABE3;
+        }
+
+        input[type=range] { 
+            width: 100%; 
+            accent-color: #1AABE3; 
+            cursor: pointer; 
+        }
+
+        /* Indicateurs et Pied de Page */
+        footer {
+            position: relative;
+            z-index: 10;
+            background-color: #1a3a5a;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        footer p { margin: 0; font-size: 14px; letter-spacing: 1px; }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 15;
+        }
+
+        .arrow {
+            width: 15px; height: 15px; border-right: 3px solid white; border-bottom: 3px solid white;
+            transform: rotate(45deg); margin-top: -10px; animation: bounce-double 2s infinite;
+        }
+
+        .scroll-indicator p {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+            margin-top: 15px; color: rgba(255, 255, 255, 0.8); font-weight: bold;
+        }
+
+        @keyframes bounce-double {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.5;}
+            40% { transform: translateY(-10px) rotate(45deg); opacity: 1;}
+            60% { transform: translateY(-5px) rotate(45deg); opacity: 1;}
+        }    
+
+        .heart {
+            display: inline-block; color: #e74c3c; 
+            animation: heartbeat 1.5s ease-in-out infinite;
+            transform-origin: center; 
+        }
+
+        @keyframes heartbeat {
+            0%, 60%, 100% {transform: scale(1);}
+            15% {transform: scale(1.3); }
+            30% {transform: scale(1.1); }
+            45% {transform: scale(1.4);}
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <div id="map-wrapper">
+        <div id="map"></div>
+    </div>
+
+    <div id="story-container">
+        
+        <section class="full-width-block hero">
+            <h1>La <span class="accent-word">Durance</span></h1>
+            <p>Voyage au <span class="heart">❤</span> des barrages.</p>
+            <span class="hero-source">© THIBAUT VERGOZ</span>
+            <div class="scroll-indicator">
+                <div class="arrow"></div>
+                <div class="arrow"></div>
+                <p>Scrollez pour découvrir</p>
+            </div>
+        </section>
+
+        <section class="step" data-point-index="0" data-zoom="15">
+            <div class="step-content">
+                <img src="https://static.serreponcon.com/wp-content/uploads/2025/02/p9-080223110710-remi-morel-ot-serre-poncon-1600x900.jpg" class="step-image">
+                <span class="photo-credit">© Rémi Morel / OT Serre-Ponçon</span>
+                <h2>Serre-Ponçon</h2>
+                <p>Le barrage de <span class="texte-couleur">Serre-Ponçon</span> est un barrage en remblai établi sur le cours de la Durance à un peu moins de deux kilomètres à l'aval de sa confluence avec l'Ubaye, dans le département des Hautes-Alpes. Il est construit en 1959 et forme un imposant lac de retenue, le lac de Serre-Ponçon. L'aménagement hydraulique est complété par le lac d'Espinasses situé au pied du barrage de Serre-Ponçon, qui alimente le canal EDF de la Durance. </p>
+                <span class="text-source">Source : Wikipédia</span>
+            </div>
+        </section>
+
+        <section class="step" data-point-index="1" data-zoom="17">
+            <div class="step-content">
+                <img src="https://alpesdusud.alpes1.com/media/news/les-vannes-du-barrage-d-espinasses-s-ouvrent-mercredi-les-activites-autour-de-la-durance-deconseillees_691341433baf5.jpg" class="step-image">
+                <span class="photo-credit">© Alpes 1</span>
+                <h2>Barrage d'Espinasses</h2>
+                <p>L'aménagement hydraulique de Serre Ponçon est complété par le lac de retenue d'<span class="texte-couleur">Espinasses</span>, bassin de compensation de Serre Ponçon situé au pied du barrage. Cette retenue d'eau, mise en service en 1966, permet d'étaler les débits de pointe de la centrale hydraulique. Elle joue le rôle d'entonnoir pour le canal de la Durance emmenant les eaux à l'usine de la Saulce. Quatre vannes barrent le lit historique de la Durance. Un trou dans l'une d'elle permet de conserver une alimentation à la rivière sauvage.</p>
+                <span class="text-source">Source : voyages-passion-de-marie.com</span>
+            </div>
+        </section>
+
+        <section class="full-width-block chapter-break">
+            <h2>L'aménagement de la Durance et du Verdon </h2>
+            <p>L’État a décidé en 1955 d’aménager la Durance et le Verdon pour produire de l’électricité, fournir de l’eau pour l’irrigation, assurer l’accès à l’eau potable des villes et lutter contre les petites et moyennes inondations. La réalisation de l’aménagement a été confié à EDF. EDF a construit 17 barrages dont le grand barrage réservoir de Serre-Ponçon, un canal dit usinier, 30 centrales hydroélectriques dont 15 sur le canal usinier.</p>
+            <span class="bloc-source">Source : europeanwater.org</span>
+        </section>
+
+        <section class="step" data-point-index="2" data-zoom="12">
+            <div class="step-content">
+                <h2>Le canal de Curbans</h2>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Barrage_de_La_Saulce-Curbans%2C_entonnement_du_canal_EDF.jpg/960px-Barrage_de_La_Saulce-Curbans%2C_entonnement_du_canal_EDF.jpg" class="step-image">
+                <span class="photo-credit">© Wikipédia</span>
+                <p>Le canal de l'EDF, ou canal usinier de la Durance, est un canal d’irrigation, d’adduction d’eau potable et de production électrique construit par Électricité de France pour dériver une partie des eaux de la Durance.</p>
+                <span class="text-source">Source : Commune de Curbans</span>
+            </div>
+        </section>
+
+        <div class="spacer"></div>
+
+        <section class="full-width-block chapter-break2">
+            <div class="image-wrapper">
+                <img src="https://www.edf.fr/sites/groupe/files/styles/img_1066x1411/public/2022-03/partageEau.jpg?itok=_17x4Way" class="bloc-image">
+                <span class="photo-credit-bloc">© EDF</span>
+            </div>
+            <div class="content-right">
+                <h2>Aménagement hydroélectrique Durance-Verdon</h2>
+                <div class="text-description">
+                    <p>L’<span class="texte-bloc">aménagement hydroélectrique Durance-Verdon</span> est décidé en <span class="texte-bloc">1955</span> par une loi qui confie trois missions à EDF : produire de l’électricité, l'alimentation en eau pour les cultures et les villes, la régulation des crues parfois dévastatrices de la Durance et du Verdon. Cet aménagement dont la réalisation complète prend plus de trente ans est achevé en <span class="texte-bloc">1992</span>. </p>
+                    <span class="bloc-source">Source : Wikipédia</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="chrono-section">
+            <h2 class="chrono-title">Évolution des infrastructures hydrauliques</h2>
+            <p>Déplacez le curseur pour explorer l'historique des constructions dans la vallée.</p>
+            
+            <div class="slider-container">
+                <label class="slider-label">Année : <span id="year-label" class="year-display">2026</span></label>
+                <input type="range" id="year-slider" min="1950" max="2026" value="2026">
+            </div>
+
+            <div id="map-chrono"></div>
+        </section>
+
+        <footer>
+            <p>© 2026 — Salomé et Fanomezana</p>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="data/points_1.js"></script>
+
+    <script>
+        // CARTE 1 : Logique Scrollytelling
+        var map = L.map('map', { zoomControl: false, scrollWheelZoom: false }).setView([44.5, 6.2], 10);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        if (typeof json_points_1 !== 'undefined') {
+            L.geoJson(json_points_1, {
+                pointToLayer: (f, latlng) => L.circleMarker(latlng, { radius: 8, fillColor: "#e67e22", color: "#fff", weight: 2, fillOpacity: 0.9 })
+            }).addTo(map);
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    const index = entry.target.getAttribute('data-point-index');
+                    const zoomLevel = entry.target.getAttribute('data-zoom') || 13;
+                    if (index !== null && json_points_1) {
+                        const coords = json_points_1.features[index].geometry.coordinates;
+                        map.flyTo([coords[1], coords[0]], zoomLevel, { duration: 2 });
+                    }
+                } else { entry.target.classList.remove('active'); }
+            });
+        }, { threshold: 0.6 });
+
+        document.querySelectorAll('.step').forEach(s => observer.observe(s));
+
+        // CARTE 2 : Logique Chronologique
+        var mapChrono = L.map('map-chrono', { scrollWheelZoom: false }).setView([44.2, 6.1], 9);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapChrono);
+
+        var pointsEvolution = [
+            { name: "Barrage de Serre-Ponçon", year: 1959, coords: [44.50, 6.29] },
+            { name: "Barrage d'Espinasses", year: 1966, coords: [44.46, 6.18] },
+            { name: "Centrale de Curbans", year: 1966, coords: [44.42, 5.95] },
+            { name: "Barrage de Sainte-Croix", year: 1974, coords: [43.76, 6.13] },
+            { name: "Aménagement Basse-Durance", year: 1992, coords: [43.72, 5.20] },
+            { name: "Site Expérimental 2026", year: 2026, coords: [44.15, 6.05] }
+        ];
+
+        var layerMarkers = L.layerGroup().addTo(mapChrono);
+
+        function refreshChrono(selectedYear) {
+            layerMarkers.clearLayers();
+            pointsEvolution.forEach(p => {
+                if (p.year <= selectedYear) {
+                    L.circleMarker(p.coords, {
+                        radius: 10, fillColor: "#e67e22", color: "white", weight: 2, fillOpacity: 0.8
+                    }).bindPopup(`<b>${p.name}</b><br>Inauguration : ${p.year}`).addTo(layerMarkers);
+                }
+            });
+        }
+
+        const slider = document.getElementById('year-slider');
+        const label = document.getElementById('year-label');
+
+        slider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            label.innerText = val;
+            refreshChrono(val);
+        });
+
+        refreshChrono(2026);
+    </script>
+</body>
+</html>
